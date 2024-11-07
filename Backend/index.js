@@ -10,8 +10,9 @@ app.use(express.json())
 
 app.use("/api",authRoutes)
 
-
-
+app.get("/",(req,res)=>{
+    res.json({msg:"This is the Backend"})
+})
 
 authRoutes.use((err, req, res, next) => {
     const status = err.status || 500;
