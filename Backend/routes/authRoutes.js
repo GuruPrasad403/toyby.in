@@ -37,7 +37,7 @@ authRoutes.post("/signup", async (req, res) => {
         }
 
         // Hash the password before saving
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 3);
         
         // Determine if the user is an admin
         if (isAdmin) {
