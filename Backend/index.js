@@ -2,8 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import {authRoutes} from './routes/authRoutes.js'
 import Main from './config/Database.js'
+import { PORT } from './config/env.js'
 const app = express()
-const Port = process.env.PORT || '2500'
+const Port = PORT|| '2500'
 app.use(cors())
 app.use(express.json())
 

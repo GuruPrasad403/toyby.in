@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 import { UserModel } from '../models/users.js';
-
+import { DB_URL } from './env.js';
  export default async function Main ()
 {
     try{
-        await mongoose.connect("mongodb+srv://Chandu:chandu8951@toyby.45zuj.mongodb.net/?retryWrites=true&w=majority")
+        await mongoose.connect(DB_URL)
          console.log("Database is Connceted ")
 
     }
