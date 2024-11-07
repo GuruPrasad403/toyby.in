@@ -88,31 +88,30 @@ authRoutes.post("/signup", async (req, res) => {
 
 // Signin Route
 authRoutes.post("/signin", async (req, res) => {
+    console.log("Request received at /signin route");
     const { email, password } = req.body;
-    let checkUser
-    req.body.isAdmin?checkUser = await AdminModel.findOne({ email }):checkUser = await UserModel.findOne({ email })
-    console.log(checkUser )
+    console.log("Received email:", email);
+
     try {
-        // Check if the user exists in the database
-        
+        const checkUser = req.body.isAdmin ? await AdminModel.findOne({ email }) : await UserModel.findOne({ email });
+        console.log("User lookup result:", checkUser);
         
         if (!checkUser) {
             return res.status(404).json({
-                msg: req.body.isAdmin? "Admin Not Found" : "User Not Found"
+                msg: req.body.isAdmin ? "Admin Not Found" : "User Not Found"
             });
         }
 
-        // Compare the provided password with the hashed password in the database
         const isPasswordValid = await bcrypt.compare(password, checkUser.password);
+        console.log("Password valid:", isPasswordValid);
 
         if (!isPasswordValid) {
-            return res.status(401).json({
-                msg: "Invalid password"
-            });
+            return res.status(401).json({ msg: "Invalid password" });
         }
 
-        // Generate JWT token
         const jwtToken = jwt.sign({ email }, JWT);
+        console.log("JWT token generated:", jwtToken);
+
         res.status(200).json({
             msg: "Signin successful",
             token: jwtToken
