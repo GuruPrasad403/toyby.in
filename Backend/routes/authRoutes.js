@@ -1,4 +1,4 @@
-import express from 'express';
+import express from 'express'
 import { Validation } from '../validations/validation.js';
 import { UserModel } from '../models/users.js';
 import bcrypt from 'bcrypt';
@@ -49,13 +49,13 @@ authRoutes.post("/signup", async (req, res) => {
                 phone,
                 isActive: true,
                 lastLogin: new Date(),
-                address: address ? {
+                address:  {
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
                     country: address.country
-                } : undefined
+                } 
             });
         } else {
             // Create a new user in the database
