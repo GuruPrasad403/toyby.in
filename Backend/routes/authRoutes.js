@@ -24,8 +24,8 @@ authRoutes.post("/signup", async (req, res) => {
         });
     }
 
-    const { name, email, password, phone, address } = validationResponse.data;
-
+    const { name, email, password, phone, address, isAdmin } = validationResponse.data;
+        
     try {
         // Check if the user already exists
         const checkUserExist = await UserModel.findOne({ email, phone });
@@ -40,7 +40,7 @@ authRoutes.post("/signup", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         // Determine if the user is an admin
-        if (req.body.isAdmin) {
+        if (isAdmin) {
             await AdminModel.create({
                 name,
                 email,
@@ -65,14 +65,14 @@ authRoutes.post("/signup", async (req, res) => {
                 password: hashedPassword,
                 createdAt: new Date(),
                 phone,
-                address: address ? {
+                address:{
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
                     country: address.country
-                } : undefined
-            });
+                }
+            })
         }
 
         res.status(201).json({
