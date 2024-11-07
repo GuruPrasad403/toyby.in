@@ -8,6 +8,11 @@ import { AdminModel } from '../models/admin.js';
 
 export const authRoutes = express.Router();
 
+authRoutes.get("/",(req,res)=>{
+    res.json({
+        msg:"This is from Auth route"
+    })
+})
 // Signup Route
 authRoutes.post("/signup", async (req, res) => {
     // Validate request body
