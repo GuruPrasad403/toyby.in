@@ -91,7 +91,7 @@ authRoutes.post("/signin", async (req, res) => {
     const { email, password } = req.body;
     let checkUser
     req.body.isAdmin?checkUser = await AdminModel.findOne({ email }):checkUser = await UserModel.findOne({ email })
-
+    console.log(checkUser )
     try {
         // Check if the user exists in the database
         
