@@ -3,18 +3,19 @@ import cors from 'cors'
 import {authRoutes} from './routes/authRoutes.js'
 import Main from './config/Database.js'
 import { PORT } from './config/env.js'
+import { adminRoutes } from './routes/adminRoutes.js'
 const app = express()
 const Port = PORT|| '2500'
 app.use(cors())
 app.use(express.json())
 
 app.use("/api",authRoutes)
-
+app.use("/api/admin",adminRoutes)
 app.get("/",(req,res)=>{
     res.json({msg:"This is the Backend"})
 })
 
-authRoutes.use((err, req, res, next) => {
+app.use((err, req, res, next) => {
     const status = err.status || 500;
     res.status(status).json({
         error: {

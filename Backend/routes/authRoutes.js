@@ -1,32 +1,31 @@
-import express from 'express'
+import express from 'express';
 import { Validation } from '../validations/validation.js';
 import { UserModel } from '../models/users.js';
 import bcrypt from 'bcrypt';
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import { JWT } from '../config/env.js';
 import { AdminModel } from '../models/admin.js';
 
 export const authRoutes = express.Router();
 
-authRoutes.get("/",(req,res)=>{
-    res.json({
-        msg:"This is from Auth route"
-    })
-})
+authRoutes.get("/", (req, res) => {
+    res.json({ msg: "This is from Auth route" });
+});
+
 // Signup Route
 authRoutes.post("/signup", async (req, res) => {
-    // Validate request body
-    const validationResponse = Validation.safeParse(req.body);
-    if (!validationResponse.success) {
-        return res.status(400).json({
-            error: validationResponse.error.issues,
-            msg: "Incorrect Data",
-        });
-    }
-
-    const { name, email, password, phone, address, isAdmin } = validationResponse.data;
-        
     try {
+        // Validate request body
+        const validationResponse = Validation.safeParse(req.body);
+        if (!validationResponse.success) {
+            return res.status(400).json({
+                error: validationResponse.error.issues,
+                msg: "Incorrect Data",
+            });
+        }
+
+        const { name, email, password, phone, address, isAdmin } = validationResponse.data;
+
         // Check if the user already exists
         const checkUserExist = await UserModel.findOne({ email, phone });
         if (checkUserExist) {
@@ -37,8 +36,8 @@ authRoutes.post("/signup", async (req, res) => {
         }
 
         // Hash the password before saving
-        const hashedPassword = await bcrypt.hash(password, 3);
-        
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         // Determine if the user is an admin
         if (isAdmin) {
             await AdminModel.create({
@@ -49,13 +48,13 @@ authRoutes.post("/signup", async (req, res) => {
                 phone,
                 isActive: true,
                 lastLogin: new Date(),
-                address:  {
+                address: {
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
                     country: address.country
-                } 
+                }
             });
         } else {
             // Create a new user in the database
@@ -65,18 +64,18 @@ authRoutes.post("/signup", async (req, res) => {
                 password: hashedPassword,
                 createdAt: new Date(),
                 phone,
-                address:{
+                address: {
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
                     country: address.country
                 }
-            })
+            });
         }
 
         res.status(201).json({
-            msg: req.body.isAdmin? "Admin Not Found" : "User Not Found"
+            msg: isAdmin ? "Admin successfully created" : "User successfully created"
         });
     } catch (error) {
         console.error("Error during user signup:", error);
@@ -89,16 +88,23 @@ authRoutes.post("/signup", async (req, res) => {
 // Signin Route
 authRoutes.post("/signin", async (req, res) => {
     console.log("Request received at /signin route");
-    const { email, password } = req.body;
+    const { email, password, isAdmin } = req.body;
     console.log("Received email:", email);
 
+    // Validate request inputs
+    if (!email || !password) {
+        return res.status(400).json({ msg: "Email and password are required" });
+    }
+
     try {
-        const checkUser = req.body.isAdmin ? await AdminModel.findOne({ email }) : await UserModel.findOne({ email });
+        const checkUser = isAdmin
+            ? await AdminModel.findOne({ email })
+            : await UserModel.findOne({ email });
         console.log("User lookup result:", checkUser);
-        
+
         if (!checkUser) {
             return res.status(404).json({
-                msg: req.body.isAdmin ? "Admin Not Found" : "User Not Found"
+                msg: isAdmin ? "Admin not found" : "User not found"
             });
         }
 
