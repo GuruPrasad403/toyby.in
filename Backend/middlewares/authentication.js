@@ -11,8 +11,9 @@ export const authentication = (req, res, next) => {
 
     try {
         // Verify the token
-        const verifiedAdmin = jwt.verify(token, JWT);
-        req.headers.token = verifiedAdmin;
+        const verify = jwt.verify(token, JWT);
+        req.headers.email = verify?.email;
+        
         next();  // Continue to the next middleware or route handler
     } catch (e) {
         // Handle specific JWT errors (invalid or expired tokens, etc.)

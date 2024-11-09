@@ -1,7 +1,10 @@
 import z from 'zod';
 
 export const Validation = z.object({
-    name: z.string().min(3).max(50),
+    name: z.string()
+        .min(3)
+        .max(50)
+        .regex(/^[a-zA-Z\s'-]+$/, "Name should only contain letters, spaces, hyphens, or apostrophes"),
     email: z.string().email(),
     password: z.string().min(5).max(15),
     isAdmin: z.boolean().default(false),
@@ -14,4 +17,4 @@ export const Validation = z.object({
         postalCode: z.string().max(6),
         country: z.string().min(3).max(15)
     }).optional() // Make the entire address field optional if it's not required
-});
+}).strict();
