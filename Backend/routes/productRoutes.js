@@ -113,3 +113,16 @@ productRoutes.put("/:id", authentication, verifyAdmin, async (req, res) => {
 });
 
 
+// Route to get all products, accessible only to admins
+productRoutes.get("/:category", authentication, async (req, res, next) => {
+    const {category} = req.params; 
+    console.log(category)
+    try {
+        const productsList = await ProductModel.find({category});
+        console.log(productsList)
+        res.json(productsList);
+    } catch (error) {
+        next(error);
+    }
+});
+
