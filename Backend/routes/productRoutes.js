@@ -3,10 +3,10 @@ import { authentication } from '../middlewares/authentication.js';
 import verifyAdmin from '../middlewares/verifyAdmin.js';
 import { ProductModel } from '../models/product.js';
 import ProductValidation from '../validations/productValidation.js';
-
+import mongoose from  'mongoose'
 // Create a router instance for product routes
 export const productRoutes = express.Router();
-
+const {ObjectId} = mongoose.Types
 // Basic route for checking if product routes are working
 productRoutes.get("/", authentication, (req, res) => {
     res.json({
@@ -125,4 +125,50 @@ productRoutes.get("/:category", authentication, async (req, res, next) => {
         next(error);
     }
 });
+//used to search by the title name 
+productRoutes.get("/search/:titleName", async (req, res, next) => {
+    const { titleName } = req.params || "Educational";
+    console.log("Title search:", titleName); // Log the search term
+
+    try {
+        const productsList = await ProductModel.find({
+            title: { $regex: titleName, $options: 'i' }
+        });
+        
+        console.log("Query result:", productsList); // Log the query result
+        res.json(productsList);
+    } catch (error) {
+        console.error("Error in /:titleName route:", error);
+        next(error);
+    }
+});
+
+
+productRoutes.get("/id/:id",authentication, async (req, res, next) => {
+    const { id } = req.params;
+    console.log("Searching for product with ID:", id);
+    
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ msg: "Invalid ID format" });
+    }
+
+    try {
+        // Use findById directly with the ID parameter
+        const productItem = await ProductModel.findById(id);
+        console.log("Product found:", productItem);
+
+        if (productItem) {
+            res.status(200).json({
+                message: "Product retrieved successfully",
+                product: productItem
+            });
+        } else {
+            res.status(404).json({ msg: "Product not found" });
+        }
+    } catch (e) {
+        console.error("Error While Searching Item:", e);
+        next(e);
+    }
+});
+
 

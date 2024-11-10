@@ -1,9 +1,8 @@
 import mongoose  from "mongoose";
 
-const Schema = new mongoose.Schema();
 const ObjectID = mongoose.Schema.Types.ObjectId
 
-const Order = new Schema({
+const Order = new mongoose.Schema({
     user:{type:ObjectID,ref:'User',required:true},
     items:[{
         productId:{type:ObjectID,ref:'Product',required:true},
