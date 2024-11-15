@@ -106,7 +106,6 @@ orderRoute.get("/status/:status", authentication, verifyAdmin, async (req, res, 
     }
 });
 
-
 //update order Satus 
 orderRoute.put("/update/:id", authentication, verifyAdmin, async (req, res, next) => {
     const { id } = req.params;  // Get the order ID from URL params
@@ -141,4 +140,6 @@ orderRoute.put("/update/:id", authentication, verifyAdmin, async (req, res, next
         next(e); // Pass the error to the error handling middleware
     }
 });
+
+
 
