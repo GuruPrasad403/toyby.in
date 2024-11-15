@@ -15,4 +15,4 @@ export const orderSchema = z.object({
     createdAt: z.date().default(() => new Date()), // Default to current date if not provided
 });
 
- 
+ export const StatusValidation = z.enum(['Pending', 'Shipped', 'Delivered', 'Cancelled'], " Status Shoul₫ be only  : ['Pending', 'Shipped', 'Delivered', 'Cancelled'] ")// Enum validation for status

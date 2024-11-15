@@ -4,7 +4,7 @@ import verifyAdmin from '../middlewares/verifyAdmin.js'
 import {OrdersModel} from "../models/order.js"
 import { UserModel } from '../models/users.js'
 import mongoose from 'mongoose'
-import {orderSchema} from '../validations/orderValidation.js'
+import {orderSchema, StatusValidation} from '../validations/orderValidation.js'
 export const orderRoute = express.Router()
 const {ObjectId} = mongoose.Types
 orderRoute.get("/",authentication,(req,res,next)=>{
@@ -111,8 +111,17 @@ orderRoute.get("/status/:status", authentication, verifyAdmin, async (req, res, 
 orderRoute.put("/update/:id", authentication, verifyAdmin, async (req, res, next) => {
     const { id } = req.params;  // Get the order ID from URL params
     const { status } = req.body; // Get the new status from the request body
+
     
     try {
+        const validation = StatusValidation.safeParse(status)
+        console.log(validation)
+        if(!validation.success){
+            res.json({
+            msg:`Please Send The Status of The Order and Id : ${id}`
+            })
+        return
+            }
         // Update only the status of the order with the provided ID
         const updatedOrder = await OrdersModel.findByIdAndUpdate(
             id,                  // Directly pass the order ID
