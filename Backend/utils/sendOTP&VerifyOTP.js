@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { smsApi } from '../config/env.js';
 
-export async function sendSMS(phoneNumber, message) {
-  const apiKey = 'GEw6JsuaTPrfR9oclhK7zF2bx5NUnkQOLW18iemAVg340MZCIydTcj34gRSpY5KyoJLFr8CkxQ1qbWAH'; // Replace with your Fast2SMS API key
+
+export async function sendOTP(phoneNumber, message) {
+console.log(smsApi)
   const url = 'https://www.fast2sms.com/dev/bulkV2'; // Updated API endpoint
 
   const data = {
@@ -15,7 +17,7 @@ export async function sendSMS(phoneNumber, message) {
   try {
     const response = await axios.post(url, data, {
       headers: {
-        authorization: apiKey, // Updated API key header
+        authorization: smsApi, // Updated API key header
         'Content-Type': 'application/json',
       },
     });
@@ -26,5 +28,5 @@ export async function sendSMS(phoneNumber, message) {
   }
 }
 
+
 // Example usage
-// sendSMS('8951657957', 'Hello, this is a test message from Fast2SMS!');

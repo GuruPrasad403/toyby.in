@@ -5,19 +5,22 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT } from '../config/env.js';
 import { AdminModel } from '../models/admin.js';
-import { authentication } from '../middlewares/authentication.js';
 import sendEmail from '../utils/sendEmail.js';
 import GenrateOtp from '../utils/genrateOTP.js';
+import { sendOTP } from '../utils/sendOTP&VerifyOTP.js';
 
 export const authRoutes = express.Router();
 
+// Default route
 authRoutes.get("/", (req, res) => {
     res.json({ msg: "This is from Auth route" });
 });
 
 // Signup Route
 authRoutes.post("/signup", async (req, res) => {
-    const otp = GenrateOtp()
+    const otp = GenrateOtp(); // Generate OTP
+    const hashedOtp = await bcrypt.hash(otp, 10); // Hash OTP
+
     try {
         // Validate request body
         const validationResponse = Validation.safeParse(req.body);
@@ -42,7 +45,6 @@ authRoutes.post("/signup", async (req, res) => {
         // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Determine if the user is an admin
         if (isAdmin) {
             await AdminModel.create({
                 name,
@@ -52,42 +54,48 @@ authRoutes.post("/signup", async (req, res) => {
                 phone,
                 isActive: true,
                 lastLogin: new Date(),
-                otp,
+                otp: hashedOtp, // Save hashed OTP
                 address: {
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
-                    country: address.country
-                }
+                    country: address.country,
+                },
             });
-            sendEmail(email,"OTP for Verification : Toyby.in", otp)
+            sendEmail(email, "OTP for Verification: Toyby.in", otp);
+            sendOTP(`${phone}`, `Dear ${name}, your OTP for Toyby.in is ${otp}. This code is valid for 10 minutes. Please do not share it with anyone.`);
         } else {
-            // Create a new user in the database
             await UserModel.create({
                 name,
                 email,
                 password: hashedPassword,
                 createdAt: new Date(),
                 phone,
-                otp,
+                otp: hashedOtp, // Save hashed OTP
                 address: {
                     street: address.street,
                     city: address.city,
                     state: address.state,
                     postalCode: address.postalCode,
-                    country: address.country
-                }
+                    country: address.country,
+                },
             });
-            sendEmail(email,"OTP for Verification : Toyby.in", otp)
+            sendEmail(email, "OTP for Verification: Toyby.in", otp);
+            sendOTP(`${phone}`, `Dear ${name}, your OTP for Toyby.in is ${otp}. This code is valid for 10 minutes. Please do not share it with anyone.`);
         }
-        setTimeout(async()=>{
-            isAdmin?await AdminModel.findOneAndUpdate({email},{otp:null},{new:true}) :
-            await UserModel.findOneAndUpdate({email},{otp:null},{new:true})
-        },(1000 * 60  *10))
+
+        // Automatically clear OTP after 10 minutes
+        setTimeout(async () => {
+            const updateFields = { otp: null };
+            isAdmin
+                ? await AdminModel.findOneAndUpdate({ email }, updateFields, { new: true })
+                : await UserModel.findOneAndUpdate({ email }, updateFields, { new: true });
+        }, 1000 * 60 * 10);
+
         res.status(201).json({
             msg: isAdmin ? "Admin successfully created" : "User successfully created",
-            verify:"Verfiy Your Account"
+            verify: "Verify Your Account",
         });
     } catch (error) {
         console.error("Error during user signup:", error);
@@ -99,9 +107,7 @@ authRoutes.post("/signup", async (req, res) => {
 
 // Signin Route
 authRoutes.post("/signin", async (req, res) => {
-    console.log("Request received at /signin route");
     const { email, password, isAdmin } = req.body;
-    console.log("Received email:", email);
 
     // Validate request inputs
     if (!email || !password) {
@@ -112,52 +118,64 @@ authRoutes.post("/signin", async (req, res) => {
         const checkUser = isAdmin
             ? await AdminModel.findOne({ email })
             : await UserModel.findOne({ email });
-        console.log("User lookup result:", checkUser);
 
         if (!checkUser) {
             return res.status(404).json({
-                msg: isAdmin ? "Admin not found" : "User not found"
+                msg: isAdmin ? "Admin not found" : "User not found",
             });
         }
 
         const isPasswordValid = await bcrypt.compare(password, checkUser.password);
-        console.log("Password valid:", isPasswordValid);
 
         if (!isPasswordValid) {
             return res.status(401).json({ msg: "Invalid password" });
         }
 
         const jwtToken = jwt.sign({ email }, JWT);
-        console.log("JWT token generated:", jwtToken);
 
         res.status(200).json({
             msg: "Signin successful",
-            token: jwtToken
+            token: jwtToken,
         });
     } catch (error) {
         console.error("Error during user signin:", error);
         res.status(500).json({
-            msg: "Server error, please try again later"
+            msg: "Server error, please try again later",
         });
     }
 });
 
-// User Verification 
+// User Verification Route
+authRoutes.put("/verify", async (req, res) => {
+    const { otp, email, isAdmin } = req.body;
 
-authRoutes.put("/verify", async(req,res,next)=>{
-    const {otp,email,isAdmin} = req.body;
-    const findUser = isAdmin? await AdminModel.findOne({email}) : await UserModel.findOne({email})
-    if(parseInt(otp)===parseInt(findUser.otp)){
-        isAdmin?await AdminModel.findOneAndUpdate({email}, {isVerified:true},{ new:true}) : await UserModel.findOneAndUpdate({email}, {isVarified:true, new:true})
-        res.json(findUser)
-        console.log(req.body,typeof(findUser?.otp))
+    try {
+        // Find user by email
+        const findUser = isAdmin
+            ? await AdminModel.findOne({ email })
+            : await UserModel.findOne({ email });
 
-        return 
+        if (!findUser) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        // Compare the provided OTP with the hashed OTP
+        const isOtpValid = await bcrypt.compare(otp, findUser.otp);
+        if (isOtpValid) {
+            const updateFields = { isVerified: true, otp: null }; // Clear OTP on success
+            const updatedUser = isAdmin
+                ? await AdminModel.findOneAndUpdate({ email }, updateFields, { new: true })
+                : await UserModel.findOneAndUpdate({ email }, updateFields, { new: true });
+
+            return res.status(200).json({
+                msg: "Verification successful",
+                user: updatedUser,
+            });
+        }
+
+        return res.status(400).json({ msg: "Invalid OTP" });
+    } catch (error) {
+        console.error("Error during OTP verification:", error);
+        res.status(500).json({ msg: "Server error, please try again later" });
     }
-    res.json({
-        msg:"invalid OTP"
-    })
-})
-
-
-
+});
