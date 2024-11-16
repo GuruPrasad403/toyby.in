@@ -5,6 +5,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT } from '../config/env.js';
 import { AdminModel } from '../models/admin.js';
+import { authentication } from '../middlewares/authentication.js';
+import sendEmail from '../utils/sendEmail.js';
+import GenrateOtp from '../utils/genrateOTP.js';
 
 export const authRoutes = express.Router();
 
@@ -14,6 +17,7 @@ authRoutes.get("/", (req, res) => {
 
 // Signup Route
 authRoutes.post("/signup", async (req, res) => {
+    const otp = GenrateOtp()
     try {
         // Validate request body
         const validationResponse = Validation.safeParse(req.body);
@@ -48,6 +52,7 @@ authRoutes.post("/signup", async (req, res) => {
                 phone,
                 isActive: true,
                 lastLogin: new Date(),
+                otp,
                 address: {
                     street: address.street,
                     city: address.city,
@@ -56,6 +61,7 @@ authRoutes.post("/signup", async (req, res) => {
                     country: address.country
                 }
             });
+            sendEmail(email,"OTP for Verification : Toyby.in", otp)
         } else {
             // Create a new user in the database
             await UserModel.create({
@@ -64,6 +70,7 @@ authRoutes.post("/signup", async (req, res) => {
                 password: hashedPassword,
                 createdAt: new Date(),
                 phone,
+                otp,
                 address: {
                     street: address.street,
                     city: address.city,
@@ -72,10 +79,15 @@ authRoutes.post("/signup", async (req, res) => {
                     country: address.country
                 }
             });
+            sendEmail(email,"OTP for Verification : Toyby.in", otp)
         }
-
+        setTimeout(async()=>{
+            isAdmin?await AdminModel.findOneAndUpdate({email},{otp:null},{new:true}) :
+            await UserModel.findOneAndUpdate({email},{otp:null},{new:true})
+        },(1000 * 60  *10))
         res.status(201).json({
-            msg: isAdmin ? "Admin successfully created" : "User successfully created"
+            msg: isAdmin ? "Admin successfully created" : "User successfully created",
+            verify:"Verfiy Your Account"
         });
     } catch (error) {
         console.error("Error during user signup:", error);
@@ -129,3 +141,23 @@ authRoutes.post("/signin", async (req, res) => {
         });
     }
 });
+
+// User Verification 
+
+authRoutes.put("/verify", async(req,res,next)=>{
+    const {otp,email,isAdmin} = req.body;
+    const findUser = isAdmin? await AdminModel.findOne({email}) : await UserModel.findOne({email})
+    if(parseInt(otp)===parseInt(findUser.otp)){
+        isAdmin?await AdminModel.findOneAndUpdate({email}, {isVerified:true},{ new:true}) : await UserModel.findOneAndUpdate({email}, {isVarified:true, new:true})
+        res.json(findUser)
+        console.log(req.body,typeof(findUser?.otp))
+
+        return 
+    }
+    res.json({
+        msg:"invalid OTP"
+    })
+})
+
+
+

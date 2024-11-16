@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     isVarified :{type:Boolean,default:false},
     phone:{type:String,required:true, unique:true},
-    
+    otp:{type:String},
     address: {
         street: String,
         city: String,

@@ -52,6 +52,7 @@ const adminSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    otp : {type:String}
 });
 
 // Pre-save middleware to update `updatedAt` on every save

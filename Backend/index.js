@@ -6,6 +6,8 @@ import { PORT } from './config/env.js'
 import { adminRoutes } from './routes/adminRoutes.js'
 import { productRoutes } from './routes/productRoutes.js'
 import { orderRoute } from './routes/orderRoutes.js'
+import { userRoutes } from './routes/userRoutes.js'
+
 const app = express()
 const Port = PORT|| '2500'
 app.use(cors())
@@ -15,6 +17,8 @@ app.use("/api",authRoutes)
 app.use("/api/admin",adminRoutes)
 app.use("/api/products",productRoutes)
 app.use("/api/orders",orderRoute)
+app.use("/api/user", userRoutes)
+
 app.get("/",(req,res)=>{
     res.json({msg:"This is the Backend"})
 })
