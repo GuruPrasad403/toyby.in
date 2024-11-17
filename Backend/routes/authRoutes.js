@@ -179,3 +179,63 @@ authRoutes.put("/verify", async (req, res) => {
         res.status(500).json({ msg: "Server error, please try again later" });
     }
 });
+
+
+//used to send OTP 
+
+
+authRoutes.post("/sendotp", async (req, res, next) => {
+    try {
+      const { isAdmin, email } = req.body;
+  
+      // Validate request body
+      if (!email || typeof isAdmin !== "boolean") {
+        return res.status(400).json({ msg: "Invalid input. Provide 'email' and 'isAdmin'." });
+      }
+  
+      // Find user based on isAdmin flag
+      const findUser = isAdmin
+        ? await AdminModel.findOne({ email })
+        : await UserModel.findOne({ email });
+  
+      if (!findUser) {
+        return res.status(404).json({ msg: "User not found." });
+      }
+  
+      const { phone, name } = findUser;
+  
+      // Generate and hash OTP
+      const otp = GenrateOtp();
+      const hashedOtp = await bcrypt.hash(otp, 10);
+  
+      // Update the user's OTP in the database
+      const otpUpdate = isAdmin
+        ? await AdminModel.findOneAndUpdate(
+            { email },
+            { otp: hashedOtp },
+            { new: true }
+          )
+        : await UserModel.findOneAndUpdate(
+            { email },
+            { otp: hashedOtp },
+            { new: true }
+          );
+  
+      // Send email and SMS
+      await sendEmail(email, "OTP for Verification: Toyby.in", `Your OTP is: ${otp}`);
+      await sendOTP(phone, `Dear ${name}, your OTP for Toyby.in is ${otp}. This code is valid for 10 minutes. Please do not share it with anyone.`);
+  
+      // Respond to client
+      res.status(200).json({
+        msg: "OTP sent successfully",
+        otpUpdate,
+      });
+    } catch (error) {
+      console.error("Error in /sendotp:", error);
+      res.status(500).json({
+        msg: "An error occurred while sending OTP.",
+        error: error.message,
+      });
+    }
+  });
+  

@@ -4,6 +4,7 @@ import { DB_URL } from './env.js';
  export default async function Main ()
 {
     try{
+        console.log(DB_URL)
         await mongoose.connect(DB_URL)
          console.log("Database is Connceted ")
 
