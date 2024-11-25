@@ -34,7 +34,7 @@ authRoutes.post("/signup", async (req, res) => {
         const { name, email, password, phone, address, isAdmin } = validationResponse.data;
 
         // Check if the user already exists
-        const checkUserExist = await UserModel.findOne({ email, phone });
+        const checkUserExist = isAdmin ? await AdminModel.findOne({ email, phone }) : await UserModel.findOne({ email, phone });
         if (checkUserExist) {
             return res.status(409).json({
                 redirect: "/signin",

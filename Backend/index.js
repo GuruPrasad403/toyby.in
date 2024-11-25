@@ -7,6 +7,9 @@ import { adminRoutes } from './routes/adminRoutes.js'
 import { productRoutes } from './routes/productRoutes.js'
 import { orderRoute } from './routes/orderRoutes.js'
 import { userRoutes } from './routes/userRoutes.js'
+import {cartRotues} from './routes/cartRoute.js'
+import { reviewRoutes } from './routes/reviewRoutes.js'
+import reportRoutes from './routes/reportsRoutes.js'
 
 const app = express()
 const Port = PORT|| '2500'
@@ -18,7 +21,9 @@ app.use("/api/admin",adminRoutes)
 app.use("/api/products",productRoutes)
 app.use("/api/orders",orderRoute)
 app.use("/api/user", userRoutes)
-
+app.use("/api/cart/",cartRotues)
+app.use("/api/review",reviewRoutes)
+app.use("/api/reports",reportRoutes)
 app.get("/",(req,res)=>{
     res.json({msg:"This is the Backend"})
 })

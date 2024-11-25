@@ -1,11 +1,10 @@
 import mongoose from 'mongoose'
 import { UserModel } from '../models/users.js';
 import { DB_URL } from './env.js';
- export default async function Main ()
+ export default async function Main (url)
 {
     try{
-        console.log(DB_URL)
-        await mongoose.connect(DB_URL)
+        await mongoose.connect(DB_URL || url)
          console.log("Database is Connceted ")
 
     }
@@ -15,6 +14,5 @@ import { DB_URL } from './env.js';
         console.log(e)
     }
 }
-
 
 

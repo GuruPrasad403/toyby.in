@@ -4,7 +4,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId; // object id type for referring
 const productSchema = new mongoose.Schema({
     adminId: { type: ObjectId, ref: "Admin" },
     title: { type: String, unique: true, required: true },
-    discription: { type: String, unique: true, required: true },
+    description: { type: String },
     category: { type: String, required: true },
     price: { type: String, default: 0, required: true },
     discountPercentage: { type: Number, default: 0 },
@@ -14,9 +14,9 @@ const productSchema = new mongoose.Schema({
     brand: { type: String, default: "Generic" },
     Wheight: { type: Number, default: 0 },
     dimensions: {
-        width: { type: Number, default: 0, required: true },
-        height: { type: Number, default: 0, required: true },
-        deep: { type: Number, default: 0, required: true }
+        width: { type: Number, default: 0, required: false },
+        height: { type: Number, default: 0, required: false },
+        deep: { type: Number, default: 0, required: false }
     },
     warrantyInformation: { type: String, required: true },
     shippingInformation: { type: String, required: true },

@@ -12,4 +12,3 @@ adminRoutes.get("/",authentication,verifyAdmin,async(req,res,next)=>{
 })
 
 
-
