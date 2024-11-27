@@ -21,7 +21,7 @@ app.use("/api/admin",adminRoutes)
 app.use("/api/products",productRoutes)
 app.use("/api/orders",orderRoute)
 app.use("/api/user", userRoutes)
-app.use("/api/cart/",cartRotues)
+app.use("/api/cart",cartRotues)
 app.use("/api/review",reviewRoutes)
 app.use("/api/reports",reportRoutes)
 app.get("/",(req,res)=>{

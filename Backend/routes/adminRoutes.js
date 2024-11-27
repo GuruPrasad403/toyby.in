@@ -10,7 +10,7 @@ import mongoose from 'mongoose'
 import ImageValidation from '../validations/imageValidations.js'
 import { ImageModel } from '../models/image.js'
 import { BrandValidation } from '../validations/brandValidation.js'
-import { BrandModel } from '../models/Brand.js'
+import { BrandModel } from '../models/brand.js'
 import CollectionModel from '../models/collections.js'
 import { collectionValidation } from '../validations/collectionValidations.js'
 const {ObjectId} =  mongoose.Types
@@ -159,7 +159,7 @@ adminRoutes.put("/update-category", authentication, verifyAdmin, async (req, res
 });
 //get the all the Category
 
-adminRoutes.get("/categories", authentication, verifyAdmin, async (req, res, next) => {
+adminRoutes.get("/categories", authentication, async (req, res, next) => {
     try {
         // Fetch all categories and populate subcategories
         const categories = await CategoryModel.find({ parentCategory: null })
