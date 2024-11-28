@@ -28,7 +28,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
     const newItem = items[0]; // Assuming one item is added at a time
 
     // Convert productID to ObjectId
-    newItem.productID = new mongoose.Types.ObjectId(newItem.productID);
+    newItem.productId = new mongoose.Types.ObjectId(newItem.productId);
 
     // Check if the cart exists for the user
     let cart = await CartModel.findOne({ userId });
@@ -41,7 +41,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
 
       // Check if the product already exists in the cart
       const existingItem = cart.items.find(
-        (item) => item.productID.toString() === newItem.productID.toString()
+        (item) => item.productId.toString() === newItem.productId.toString()
       );
 
       if (existingItem) {
@@ -67,7 +67,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
       });
     } else {
       // If no cart exists, create a new one with validated data
-      validation.data.items[0].productID = new mongoose.Types.ObjectId(newItem.productID);
+      validation.data.items[0].productId = new mongoose.Types.ObjectId(newItem.productId);
       cart = await CartModel.create(validation.data);
 
       return res.status(201).json({
