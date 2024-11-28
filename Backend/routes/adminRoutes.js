@@ -294,7 +294,7 @@ adminRoutes.put("/image-update", authentication, verifyAdmin, async (req, res, n
         const updateData = {};
         if (title) updateData.title = title;
         if (description) updateData.description = description;
-        if (image) updateData.image = image;
+        if (image) updateData.url = image;
         if (status) updateData.status = status ; // Include status explicitly
 
         // Update the image record in the database
