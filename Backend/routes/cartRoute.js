@@ -12,7 +12,7 @@ cartRotues.get("/",authentication,(req,res,next)=>{
         msg:"This is an Cart Route"
     })
 })
-cartRoutes.post("/add", authentication, async (req, res, next) => {
+cartRotues.post("/add", authentication, async (req, res, next) => {
   try {
     const validation = CartValidationSchema.safeParse(req.body);
 
