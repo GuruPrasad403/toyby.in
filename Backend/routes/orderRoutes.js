@@ -10,7 +10,7 @@ import { downloadCSV } from '../utils/downloadcsv.js';
 import { upload, validateCSVHeaders, convertToJson } from '../utils/fileStorage.js';
 import {updateFromCSV,preprocessData} from '../utils/updateBulk.js'
 export const orderRoute = express.Router()
-
+import fs from 'fs'
 const {ObjectId} = mongoose.Types
 orderRoute.get("/",authentication,(req,res,next)=>{
     res.status(200).json({
@@ -199,7 +199,7 @@ orderRoute.put("/update/:id", authentication, verifyAdmin, async (req, res, next
 
 
 // ********************************************* Bulck Order Modification ********************************** 
-orderRoute.get('/csv',authentication,verifyAdmin, async (req, res, next) => {
+orderRoute.get('/csv', async (req, res, next) => {
     try {
         // Fetch all orders with populated product and user details
         const orders = await OrdersModel.find({})
@@ -259,50 +259,49 @@ orderRoute.get('/csv',authentication,verifyAdmin, async (req, res, next) => {
 
 // Route to upload CSV for updating orders
 orderRoute.post('/bp/update', upload.single('csv'), async (req, res) => {
-    try {
-      // Check if file is uploaded
-      if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-      }
-  
-      // Get file path in /tmp
-      const filePath = `/tmp/${req.file.filename}`;
-  
-      // Validate CSV headers
-      const requiredFields = ['orderId', 'productId', 'productPrice', 'quantity', 'orderStatus', 'createdAt', 'deliverDate', 'totalOrderValue'];
-      const { missingFields, extraFields } = await validateCSVHeaders(filePath, requiredFields);
-  
-      if (missingFields.length > 0) {
-        return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
-      }
-  
-      if (extraFields.length > 0) {
-        return res.status(400).json({ message: `Extra fields found: ${extraFields.join(', ')}` });
-      }
-  
-      // Convert CSV to JSON
-      const csvData = await convertToJson(filePath);
-  
-      // Preprocess and normalize data
-      const updatedData = preprocessData(csvData);
-  
-      // Perform bulk update operation
-      await updateFromCSV(filePath, OrdersModel);
-  
-      // Cleanup temporary file
-      fs.unlinkSync(filePath);
-  
-      // Respond with success
-      res.status(200).json({ message: 'Orders updated successfully.' });
-    } catch (error) {
-      console.error('Error uploading CSV:', error);
-  
-      // If file exists, delete it to avoid leftover temp files
-      if (req.file && fs.existsSync(`/tmp/${req.file.filename}`)) {
-        fs.unlinkSync(`/tmp/${req.file.filename}`);
-      }
-  
-      res.status(500).json({ message: 'Error uploading CSV file.', error: error.message });
+  try {
+    // Check if file is uploaded
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
     }
-  });
-  
+
+    // Get file path in /tmp
+    const filePath = `/tmp/${req.file.filename}`;
+
+    // Validate CSV headers
+    const requiredFields = ['orderId', 'productId', 'productPrice', 'quantity', 'orderStatus', 'createdAt', 'deliverDate', 'totalOrderValue'];
+    const { missingFields, extraFields } = await validateCSVHeaders(filePath, requiredFields);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
+    }
+
+    if (extraFields.length > 0) {
+      return res.status(400).json({ message: `Extra fields found: ${extraFields.join(', ')}` });
+    }
+
+    // Convert CSV to JSON
+    const csvData = await convertToJson(filePath);
+
+    // Preprocess and normalize data
+    const updatedData = preprocessData(csvData);
+
+    // Perform bulk update operation
+    await updateFromCSV(filePath, OrdersModel);
+
+    // Cleanup temporary file
+    fs.unlinkSync(filePath);
+
+    // Respond with success
+    res.status(200).json({ message: 'Orders updated successfully.' });
+  } catch (error) {
+    console.error('Error uploading CSV:', error);
+
+    // If file exists, delete it to avoid leftover temp files
+    if (req.file && fs.existsSync(`/tmp/${req.file.filename}`)) {
+      fs.unlinkSync(`/tmp/${req.file.filename}`);
+    }
+
+    res.status(500).json({ message: 'Error uploading CSV file.', error: error.message });
+  }
+});
