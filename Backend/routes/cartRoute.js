@@ -68,7 +68,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
     } else {
       // If no cart exists, create a new one with validated data
       validation.data.items[0].productId = new mongoose.Types.ObjectId(newItem.productId);
-      cart = await CartModel.create(validation.data);
+      cart = await CartModel.create(userId,validation.data);
 
       return res.status(201).json({
         success: true,
