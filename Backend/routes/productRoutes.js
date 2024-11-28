@@ -238,7 +238,7 @@ productRoutes.post('/bp/update', upload.single('csv'), async (req, res, next) =>
         return res.status(400).json({ error: { message: 'No file uploaded' } });
       }
   
-      const filePath = req.file.path;
+      const filePath =`/tmp/${req.file.filename}`;
   
       // Validate the CSV headers
       const { missingFields, extraFields } = await validateCSVHeaders(filePath, requiredFields);
@@ -289,7 +289,7 @@ productRoutes.post("/bp/add", upload.single('csv'), async (req, res, next) => {
         }
 
         // Convert CSV to JSON
-        const jsonData = await convertToJson(req.file.path); // Await the async function
+        const jsonData = await convertToJson(`/tmp/${req.file.filename}`); // Await the async function
 
         // If needed, preprocess the JSON data
         const processedData = preprocessData(jsonData);
