@@ -419,17 +419,12 @@ adminRoutes.post("/add-collection", authentication, verifyAdmin, async (req, res
 adminRoutes.get("/collection/:collectionName", authentication, verifyAdmin, async (req, res, next) => {
     try {
         const { collectionName } = req.params;
-
-        // Validate the collectionName using Zod schema
-        const validate = collectionValidation.safeParse({ collectionName });
-
-        if (!validate.success) {
+        // Validate the collectionName parameter
+        if (!collectionName || typeof collectionName !== "string") {
             return res.status(400).json({
-                msg: "Invalid Inputs",
-                error: validate.error.errors,
+                msg: "Invalid Inputs or Name of the Collections",
             });
         }
-
         // Query the database using CollectionModel to get the collection data
         const collectedData = await CollectionModel.find({ collectionName }).populate({
             path: "productId", // Populate the related product information

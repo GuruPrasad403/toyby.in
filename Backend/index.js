@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 try{
     Main()
     app.listen(Port,(req,res)=>{
-        console.log("server is running at "+ Port)
+        console.log("server is running at  http://localhost:"+ Port)
     })
 }
 catch(e){

@@ -23,8 +23,8 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
         errors: validation.error.errors,
       });
     }
-
-    const { userId, items } = validation.data;
+    const {userId} = req.user
+    const { items } = validation.data;
     const newItem = items[0]; // Assuming one item is added at a time
 
     // Convert productID to ObjectId
