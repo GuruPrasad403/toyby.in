@@ -233,6 +233,7 @@ adminRoutes.delete('/:id', authentication, verifyAdmin, async (req, res, next) =
         next(error);
     }
 });
+
 // Add a new image to the banner
 adminRoutes.post("/add-image", authentication, verifyAdmin, async (req, res, next) => {
     try {
@@ -252,7 +253,7 @@ adminRoutes.post("/add-image", authentication, verifyAdmin, async (req, res, nex
         const newImage = await ImageModel.create({
             title: title || "Untitled", // Provide a default value
             description: description || "No description provided",
-            image,
+            url:image,
         });
 
         // Respond with the created image
