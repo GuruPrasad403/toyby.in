@@ -1,5 +1,4 @@
-import mongoose  from "mongoose";
-
+import mongoose  from "mongoose"
 const ObjectID = mongoose.Schema.Types.ObjectId
 
 const Order = new mongoose.Schema({

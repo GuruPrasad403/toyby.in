@@ -17,7 +17,7 @@ orderRoute.get("/",authentication,(req,res,next)=>{
         msg:"this is from order Route"
     })
 })
-orderRoute.post("/createorder/", authentication, async (req, res, next) => {
+orderRoute.post("/createorder", authentication, async (req, res, next) => {
     const { id } = req.user; // User ID from authentication middleware
     const email = req.headers.email;
 
@@ -87,8 +87,9 @@ orderRoute.post("/createorder/", authentication, async (req, res, next) => {
 
 orderRoute.get("/search/:id",authentication, async(req,res,next)=>{
     const {id} = req.params;
+    const {userId} = req.user
     try{
-    const orders = await OrdersModel.find({user: new ObjectId(id)});
+    const orders = await OrdersModel.find({user: new ObjectId(userId)});
     res.status(200).json({orders});
     }
     catch (e){
@@ -198,7 +199,7 @@ orderRoute.put("/update/:id", authentication, verifyAdmin, async (req, res, next
 
 
 // ********************************************* Bulck Order Modification ********************************** 
-orderRoute.get('/csv', async (req, res, next) => {
+orderRoute.get('/csv',authentication,verifyAdmin, async (req, res, next) => {
     try {
         // Fetch all orders with populated product and user details
         const orders = await OrdersModel.find({})
@@ -264,8 +265,8 @@ orderRoute.post('/bp/update', upload.single('csv'), async (req, res) => {
         return res.status(400).send('No file uploaded.');
       }
   
-      // Get file path
-      const filePath = `./uploads/${req.file.filename}`;
+      // Get file path in /tmp
+      const filePath = `/tmp/${req.file.filename}`;
   
       // Validate CSV headers
       const requiredFields = ['orderId', 'productId', 'productPrice', 'quantity', 'orderStatus', 'createdAt', 'deliverDate', 'totalOrderValue'];
@@ -282,16 +283,25 @@ orderRoute.post('/bp/update', upload.single('csv'), async (req, res) => {
       // Convert CSV to JSON
       const csvData = await convertToJson(filePath);
   
-      // Preprocess and normalize data as required (if needed, based on your structure)
+      // Preprocess and normalize data
       const updatedData = preprocessData(csvData);
   
-      // Now call the `updateFromCSV` utility to perform the bulk update operation
+      // Perform bulk update operation
       await updateFromCSV(filePath, OrdersModel);
+  
+      // Cleanup temporary file
+      fs.unlinkSync(filePath);
   
       // Respond with success
       res.status(200).json({ message: 'Orders updated successfully.' });
     } catch (error) {
       console.error('Error uploading CSV:', error);
+  
+      // If file exists, delete it to avoid leftover temp files
+      if (req.file && fs.existsSync(`/tmp/${req.file.filename}`)) {
+        fs.unlinkSync(`/tmp/${req.file.filename}`);
+      }
+  
       res.status(500).json({ message: 'Error uploading CSV file.', error: error.message });
     }
   });

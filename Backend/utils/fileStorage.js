@@ -8,15 +8,28 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure multer for file uploads
+// for localhost Configure multer for file uploads
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, './uploads/'); // Ensure this directory exists
+//   },
+//   filename: function (req, file, cb) {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+//     const originalExtension = path.extname(file.originalname); // Get the original extension
+//     cb(null, file.fieldname + '-' + uniqueSuffix + originalExtension); // Append extension
+//   },
+// });
+
+
+//for vercel deployment 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/'); // Ensure this directory exists
+    cb(null, '/tmp/'); // Use Vercel's writable temporary directory
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const originalExtension = path.extname(file.originalname); // Get the original extension
-    cb(null, file.fieldname + '-' + uniqueSuffix + originalExtension); // Append extension
+    const originalExtension = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + originalExtension);
   },
 });
 export const upload = multer({ storage: storage });
