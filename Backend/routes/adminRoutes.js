@@ -402,7 +402,7 @@ adminRoutes.post("/add-collection", authentication, verifyAdmin, async (req, res
         // Create a new collection in the database
         const addedCollection = await CollectionModel.create({
             collectionName,
-            objectproductId
+            productId
         });
 
         // Respond with the added collection
