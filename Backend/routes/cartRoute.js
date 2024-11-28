@@ -12,7 +12,7 @@ cartRotues.get("/",authentication,(req,res,next)=>{
         msg:"This is an Cart Route"
     })
 })
-cartRotues.post("/add", authentication, async (req, res, next) => {
+cartRoutes.post("/add", authentication, async (req, res, next) => {
   try {
     const validation = CartValidationSchema.safeParse(req.body);
 
@@ -23,11 +23,12 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
         errors: validation.error.errors,
       });
     }
-    const {userId} = req.user
+
+    const { userId } = req.user; // Extract user ID from the authenticated user
     const { items } = validation.data;
     const newItem = items[0]; // Assuming one item is added at a time
 
-    // Convert productID to ObjectId
+    // Ensure productId is a valid ObjectId
     newItem.productId = new mongoose.Types.ObjectId(newItem.productId);
 
     // Check if the cart exists for the user
@@ -36,7 +37,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
     if (cart) {
       // Ensure cart.items is initialized
       if (!Array.isArray(cart.items)) {
-        cart.items = []; // Initialize if not already
+        cart.items = [];
       }
 
       // Check if the product already exists in the cart
@@ -51,14 +52,15 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
         });
       }
 
-      // Push the new item into the cart's items array
+      // Add the new item and update the total price
       cart.items.push(newItem);
-
-      // Update the total price
-      cart.totalPrice += newItem.price * newItem.quantity;
+      cart.totalPrice = cart.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
 
       // Save the updated cart back to the database
-      cart = await cart.save();
+      await cart.save();
 
       return res.status(200).json({
         success: true,
@@ -66,9 +68,14 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
         cart,
       });
     } else {
-      // If no cart exists, create a new one with validated data
-      validation.data.items[0].productId = new mongoose.Types.ObjectId(newItem.productId);
-      cart = await CartModel.create(userId,validation.data);
+      // If no cart exists, create a new one
+      const newCart = {
+        userId,
+        items: [newItem],
+        totalPrice: newItem.price * newItem.quantity,
+      };
+
+      cart = await CartModel.create(newCart);
 
       return res.status(201).json({
         success: true,
@@ -77,6 +84,7 @@ cartRotues.post("/add", authentication, async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.error("Error while adding to the cart:", error);
     next(error);
   }
 });
