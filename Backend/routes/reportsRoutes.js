@@ -3,7 +3,7 @@ import { authentication } from '../middlewares/authentication.js';
 import verifyAdmin from '../middlewares/verifyAdmin.js';
 import { ProductModel } from '../models/product.js';
 import { OrdersModel } from '../models/order.js';
-import { UserModel } from '../models/user.js';
+import { UserModel } from '../models/users.js';
 import mongoose from 'mongoose';
 
 export const reportRoutes = express.Router();
