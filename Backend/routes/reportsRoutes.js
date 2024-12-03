@@ -3,78 +3,85 @@ import { authentication } from '../middlewares/authentication.js';
 import verifyAdmin from '../middlewares/verifyAdmin.js';
 import { ProductModel } from '../models/product.js';
 import { OrdersModel } from '../models/order.js';
+import { UserModel } from '../models/user.js';
 import mongoose from 'mongoose';
 
 export const reportRoutes = express.Router();
 const { ObjectId } = mongoose.Types;
 
-// Route to get product count and stock status
-reportRoutes.get('/product-summary', authentication, verifyAdmin, async (req, res, next) => {
+// Route to get all summary data (revenue, users, products, orders)
+reportRoutes.get('/summary', authentication, verifyAdmin, async (req, res, next) => {
     try {
         // Total number of products
         const totalProducts = await ProductModel.countDocuments();
 
-        // Products in stock and out of stock
-        const inStock = await ProductModel.countDocuments({ stock: { $gt: 0 } });
-        const outOfStock = await ProductModel.countDocuments({ stock: { $eq: 0 } });
+        // Total number of users
+        const totalUsers = await UserModel.countDocuments();
 
-        res.status(200).json({
-            totalProducts,
-            inStock,
-            outOfStock
-        });
-    } catch (error) {
-        next(error);
-    }
-});
+        // Total number of orders
+        const totalOrders = await OrdersModel.countDocuments();
 
-// Route to get order status counts
-reportRoutes.get('/order-status-summary', authentication, verifyAdmin, async (req, res, next) => {
-    try {
-        // Order counts by status
-        const pendingOrders = await OrdersModel.countDocuments({ status: 'Pending' });
-        const shippedOrders = await OrdersModel.countDocuments({ status: 'Shipped' });
-        const deliveredOrders = await OrdersModel.countDocuments({ status: 'Delivered' });
-        const cancelledOrders = await OrdersModel.countDocuments({ status: 'Cancelled' });
-
-        res.status(200).json({
-            pendingOrders,
-            shippedOrders,
-            deliveredOrders,
-            cancelledOrders
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
-// Route to get total sales (order amount)
-reportRoutes.get('/sales-summary', authentication, verifyAdmin, async (req, res, next) => {
-    try {
+        // Total revenue (sum of all order amounts)
         const orders = await OrdersModel.aggregate([
             {
                 $unwind: "$items"
             },
             {
                 $group: {
-                    _id: "$items.productId",
-                    totalSales: { $sum: { $multiply: ["$items.quantity", "$items.price"] } }
+                    _id: null,
+                    totalRevenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } }
                 }
             }
         ]);
 
-        const totalSales = orders.reduce((acc, order) => acc + order.totalSales, 0);
+        const totalRevenue = orders.length > 0 ? orders[0].totalRevenue : 0;
 
         res.status(200).json({
-            totalSales
+            totalProducts,
+            totalUsers,
+            totalOrders,
+            totalRevenue
         });
     } catch (error) {
         next(error);
     }
 });
 
-// Route to get most popular products (based on order frequency)
-reportRoutes.get('/most-popular-products', authentication, verifyAdmin, async (req, res, next) => {
+// Route to get orders data for the line graph (by date range)
+reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res, next) => {
+    const { startDate, endDate } = req.query;
+
+    try {
+        const ordersData = await OrdersModel.aggregate([
+            {
+                $match: {
+                    orderDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                }
+            },
+            {
+                $unwind: "$items"
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } },
+                    totalSales: { $sum: { $multiply: ["$items.quantity", "$items.price"] } }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ]);
+
+        res.status(200).json({
+            ordersData
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Route to get most sold products with details (image, stock, name, price)
+reportRoutes.get('/most-sold-products', authentication, verifyAdmin, async (req, res, next) => {
     try {
         const popularProducts = await OrdersModel.aggregate([
             {
@@ -94,27 +101,23 @@ reportRoutes.get('/most-popular-products', authentication, verifyAdmin, async (r
             }
         ]);
 
+        const productIds = popularProducts.map(product => product._id);
+        const products = await ProductModel.find({
+            _id: { $in: productIds }
+        }).select('title price stock thumbnail'); // Get product details (name, price, stock, thumbnail)
+
+        const result = popularProducts.map(popProduct => {
+            const product = products.find(p => p._id.toString() === popProduct._id.toString());
+            return {
+                ...product.toObject(),
+                orderCount: popProduct.orderCount
+            };
+        });
+
         res.status(200).json({
-            popularProducts
+            mostSoldProducts: result
         });
     } catch (error) {
-        next(error);
-    }
-});
-
-// Route to get orders by date range
-reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res, next) => {
-    const { startDate, endDate } = req.query;
-
-    try {
-        const ordersByDate = await OrdersModel.find({
-            orderDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-        });
-
-        res.status(200).json({
-            ordersByDate
-        });
-    } catch (error) { 
         next(error);
     }
 });
