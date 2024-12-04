@@ -4,13 +4,13 @@ const fetchData = async () => {
     try {
         const response = await axios({
             method: 'GET',
-            url: 'https://toyby-in.vercel.app/api/reports/summary',
+            url: 'https://toyby-in.vercel.app/api/reports/most-sold-products',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IkFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTczMTE3NTk1OX0.bhaHTB96SUPmPOAPJBpG-3OVulkIRmjSBmsKyLTY4Fg',
             },
-            body: {
-                "isAdmin": true, // Body data
+            params: {
+                isAdmin: true, // Body data
             },
         });
 

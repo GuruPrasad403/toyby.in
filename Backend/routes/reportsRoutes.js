@@ -79,40 +79,36 @@ reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res
         next(error);
     }
 });
-
-// Route to get most sold products with details (image, stock, name, price)
 reportRoutes.get('/most-sold-products', authentication, verifyAdmin, async (req, res, next) => {
     try {
         const popularProducts = await OrdersModel.aggregate([
-            {
-                $unwind: "$items"
-            },
+            { $unwind: "$items" },
             {
                 $group: {
                     _id: "$items.productId",
                     orderCount: { $sum: "$items.quantity" }
                 }
             },
-            {
-                $sort: { orderCount: -1 }
-            },
-            {
-                $limit: 5
-            }
+            { $sort: { orderCount: -1 } },
+            { $limit: 5 }
         ]);
 
         const productIds = popularProducts.map(product => product._id);
         const products = await ProductModel.find({
             _id: { $in: productIds }
-        }).select('title price stock thumbnail'); // Get product details (name, price, stock, thumbnail)
+        }).select('title price stock thumbnail');
 
         const result = popularProducts.map(popProduct => {
             const product = products.find(p => p._id.toString() === popProduct._id.toString());
+            if (!product) {
+                console.warn(`Product with ID ${popProduct._id} not found.`);
+                return null; // Handle missing product case
+            }
             return {
                 ...product.toObject(),
                 orderCount: popProduct.orderCount
             };
-        });
+        }).filter(Boolean); // Filter out null results
 
         res.status(200).json({
             mostSoldProducts: result
