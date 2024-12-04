@@ -4,29 +4,12 @@ import { MdDeliveryDining } from "react-icons/md";
 import { FaSitemap } from "react-icons/fa6";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import {  ThreeDot } from "react-loading-indicators";
+import { useFetch } from "../hooks/useFetch.js";
 export default function ReportCard(){
-    const [data,setData] = useState()
-    const fetchData = async () => {
-        try {
-            const response = await axios({
-                method: 'GET',
-                url: 'https://toyby-in.vercel.app/api/reports/summary',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IkFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTczMTE3NTk1OX0.bhaHTB96SUPmPOAPJBpG-3OVulkIRmjSBmsKyLTY4Fg',
-                },
-                params: {
-                    isAdmin: true, // Body data
-                },
-            });
-            setData(response.data)
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
-    useEffect(()=>{
-        fetchData()
-    },[])    
+    // const [data,setData] = useState()
+    const {data} = useFetch({route:"api/reports/summary",method:"GET",token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IkFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTczMTE3NTk1OX0.bhaHTB96SUPmPOAPJBpG-3OVulkIRmjSBmsKyLTY4Fg", paramsData:{isAdmin:true}})
+       
     return(
         
         <div className="p-1 md:p-3 my-5">
@@ -34,7 +17,7 @@ export default function ReportCard(){
                 <div className="grid grid-cols-2 gap-5 p-5 w-full shadow-lg rounded-3xl items-center  pl-5 hover:bg-[#1e2640] hover:text-white" >
                     <div>
                         <div>
-                            {data?<h1 className="text-3xl">{data.totalRevenue}</h1>:"Loading"}
+                            {data?<h1 className="text-3xl">{data.totalRevenue}</h1>:<ThreeDot color="#1e2640" size="medium" text="Loading" textColor="#000000" />}
                         </div>
                         <div>
                             <h1 className="py-2 text-lg md:text-xl font-semibold">
@@ -61,7 +44,7 @@ export default function ReportCard(){
                 <div className="grid grid-cols-2 gap-5 p-5 w-full shadow-lg rounded-3xl items-center  pl-5 hover:bg-[#1e2640] hover:text-white" >
                     <div>
                         <div>
-                            {data?<h1 className="text-3xl"> {data.totalOrders}</h1>:"loading"}
+                            {data?<h1 className="text-3xl"> {data.totalOrders}</h1>:<ThreeDot color="#1e2640" size="medium" text="Loading" textColor="#000000" />}
                         </div>
                         <div>
                             <h1 className="py-2 text-lg md:text-xl font-semibold">
@@ -89,7 +72,7 @@ export default function ReportCard(){
                 <div className="grid grid-cols-2 gap-5 p-5 w-full shadow-lg rounded-3xl items-center  pl-5 hover:bg-[#1e2640] hover:text-white" >
                     <div>
                         <div>
-                            {data?<h1 className="text-3xl"> {data.totalUsers}</h1>:"Loading"}
+                            {data?<h1 className="text-3xl"> {data.totalUsers}</h1>:<ThreeDot color="#1e2640" size="medium" text="Loading" textColor="#000000" />}
                         </div>
                         <div>
                             <h1 className="py-2 text-lg md:text-xl font-semibold" >
@@ -117,7 +100,7 @@ export default function ReportCard(){
                 <div className="grid grid-cols-2 gap-5 p-5 w-full shadow-lg rounded-3xl items-center  pl-5 hover:bg-[#1e2640] hover:text-white" >
                     <div>
                         <div>
-                            {data?<h1 className="text-3xl">{data.totalProducts}</h1>:"Loading"}
+                            {data?<h1 className="text-3xl">{data.totalProducts}</h1>:<ThreeDot color="#1e2640" size="medium" text="Loading" textColor="#000000" />}
                         </div>
                         <div>
                             <h1 className="py-2 text-lg md:text-xl font-semibold">

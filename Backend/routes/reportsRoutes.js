@@ -47,15 +47,17 @@ reportRoutes.get('/summary', authentication, verifyAdmin, async (req, res, next)
     }
 });
 
-// Route to get orders data for the line graph (by date range)
 reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res, next) => {
     const { startDate, endDate } = req.query;
+
+    console.log('Start Date:', startDate);
+    console.log('End Date:', endDate);
 
     try {
         const ordersData = await OrdersModel.aggregate([
             {
                 $match: {
-                    orderDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
                 }
             },
             {
@@ -63,7 +65,7 @@ reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res
             },
             {
                 $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } },
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     totalSales: { $sum: { $multiply: ["$items.quantity", "$items.price"] } }
                 }
             },
@@ -72,6 +74,7 @@ reportRoutes.get('/orders-by-date', authentication, verifyAdmin, async (req, res
             }
         ]);
 
+        console.log('Orders Data:', ordersData);  // Log the result to check the data
         res.status(200).json({
             ordersData
         });
